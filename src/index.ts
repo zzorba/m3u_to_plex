@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv'
 import * as fs from 'fs';
 import fetch from 'node-fetch';
 import { promisify } from 'util';
-import { endsWith } from 'lodash';
+import _ from 'lodash';
 import ProgressBar from 'progress';
 
 dotenv.config();
@@ -46,7 +46,7 @@ const readFile = promisify(fs.readFile);
   const files: string[] = [];
   for (let i = 0; i < allFiles.length; i++) {
     const file = allFiles[i];
-    if (endsWith(file, '.m3u')) {
+    if (_.endsWith(file, '.m3u')) {
       files.push(file);
     }
   }

@@ -1,6 +1,7 @@
 import prompts from 'prompts';
 import * as dotenv from 'dotenv'
 import * as fs from 'fs';
+import * as path from 'path';
 import fetch from 'node-fetch';
 import { promisify } from 'util';
 import _ from 'lodash';
@@ -19,18 +20,18 @@ const readFile = promisify(fs.readFile);
     name: 'folder',
     message: 'What is the folder of m3u files that you wish to import?',
   }]);
-
-  if (!response.folder || !fs.existsSync(response.folder)) {
+  const folder: string | undefined = response.folder;
+  if (!folder || !fs.existsSync(folder)) {
     console.error('Folder is required and should be a path to a directory of files.');
     return 1;
   }
 
-  const allFiles = await readDir(response.folder);
+  const allFiles = await readDir(folder);
   const files: string[] = [];
   for (let i = 0; i < allFiles.length; i++) {
     const file = allFiles[i];
     if (_.endsWith(file, '.m3u')) {
-      files.push(file);
+      files.push(path.resolve(folder, file));
     }
   }
   if (!files.length) {
@@ -53,7 +54,7 @@ const readFile = promisify(fs.readFile);
   )
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const uri = `${process.env.PLEX_SERVER}?sectionID=${process.env.PLEX_LIBRARY_SECTION}&path=${encodeURIComponent(file)}&X-Plex-Token=${process.env.PLEX_LIBRARY_SECTION}`;
+    const uri = `${process.env.PLEX_SERVER}?sectionID=${process.env.PLEX_LIBRARY_SECTION}&path=${encodeURIComponent(file)}&X-Plex-Token=${process.env.PLEX_TOKEN}`;
     const r = await fetch(
       uri,
       {

@@ -35,7 +35,7 @@ const readFile = promisify(fs.readFile);
     if (_.endsWith(file, '.m3u')) {
       const contents = await readFile(path.resolve(folder, file), 'utf8');
       const newFile = path.resolve(tempDir, file)
-      const clean = contents.replaceAll('\\\\THEMOTHERLODE\\music\\', 'Z:\\');
+      const clean = contents.replaceAll('\\\\THEMOTHERLODE\\music\\', 'Z:\\').replaceAll('Z:\\\\', 'Z:\\');
       fs.writeFileSync(newFile, clean);
 
       files.push(newFile);

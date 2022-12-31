@@ -2,6 +2,7 @@ import prompts from 'prompts';
 import * as dotenv from 'dotenv'
 import * as fs from 'fs';
 import * as path from 'path';
+import * as temp from 'temp';
 import fetch from 'node-fetch';
 import { promisify } from 'util';
 import _ from 'lodash';
@@ -54,13 +55,18 @@ const readFile = promisify(fs.readFile);
   )
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const uri = `${process.env.PLEX_SERVER}?sectionID=${process.env.PLEX_LIBRARY_SECTION}&path=${encodeURIComponent(file)}&X-Plex-Token=${process.env.PLEX_TOKEN}`;
+    const tempFile = temp.openSync('.m3u');
+    const contents = await readFile(file, 'utf8');
+
+    fs.writeSync(tempFile.fd, contents.replaceAll('\\\\THEMOTHERLODE\\music\\', 'Z:\\'));
+    const uri = `${process.env.PLEX_SERVER}/playlists/upload?sectionID=${process.env.PLEX_LIBRARY_SECTION}&path=${encodeURIComponent(tempFile.path)}&X-Plex-Token=${process.env.PLEX_TOKEN}`;
     const r = await fetch(
       uri,
       {
         method: 'POST',
       }
     );
+    fs.closeSync(tempFile.fd);
     console.log(file);
     console.log(uri);
     console.log(r);

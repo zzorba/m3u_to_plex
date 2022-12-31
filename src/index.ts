@@ -29,10 +29,16 @@ const readFile = promisify(fs.readFile);
 
   const allFiles = await readDir(folder);
   const files: string[] = [];
+  const tempDir = temp.mkdirSync();
   for (let i = 0; i < allFiles.length; i++) {
     const file = allFiles[i];
     if (_.endsWith(file, '.m3u')) {
-      files.push(path.resolve(folder, file));
+      const contents = await readFile(path.resolve(folder, file), 'utf8');
+      const newFile = path.resolve(tempDir, file)
+      const clean = contents.replaceAll('\\\\THEMOTHERLODE\\music\\', 'Z:\\');
+      fs.writeFileSync(newFile, clean);
+
+      files.push(newFile);
     }
   }
   if (!files.length) {
@@ -55,18 +61,13 @@ const readFile = promisify(fs.readFile);
   )
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const tempFile = temp.openSync('.m3u');
-    const contents = await readFile(file, 'utf8');
-
-    fs.writeSync(tempFile.fd, contents.replaceAll('\\\\THEMOTHERLODE\\music\\', 'Z:\\'));
-    const uri = `${process.env.PLEX_SERVER}/playlists/upload?sectionID=${process.env.PLEX_LIBRARY_SECTION}&path=${encodeURIComponent(tempFile.path)}&X-Plex-Token=${process.env.PLEX_TOKEN}`;
+    const uri = `${process.env.PLEX_SERVER}/playlists/upload?sectionID=${process.env.PLEX_LIBRARY_SECTION}&path=${encodeURIComponent(file)}&X-Plex-Token=${process.env.PLEX_TOKEN}`;
     const r = await fetch(
       uri,
       {
         method: 'POST',
       }
     );
-    fs.closeSync(tempFile.fd);
     if (r.status !== 200) {
       console.error(`Problem with ${file}.`);
       console.log(file);

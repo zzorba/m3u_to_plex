@@ -16,27 +16,10 @@ const readFile = promisify(fs.readFile);
   console.log(`1. Open your Plex server web app, as normal.\n2.In Plex, navigate to any file in the library for which you want to import a playlist.(e.g. in your 'Rock Music' library, navigate to 'BornToBeWild.mp3').\n3. On the play bar for that library item, click the More Actions ellipses (...), select Get Info, and then click View XML.\nA new browser window opens containing XML details about the library item. From the URL, copy the X-Plex-Token value into a text editor. From the page content, copy the librarySectionID value into a text editor.\n4. Locate the path to the folder full of m3u files that you want to import (e.g. C:\MyMusic\MyCoolRock.m3u)`);
  const response = await prompts([{
     type: 'text',
-    name: 'plexToken',
-    message: 'What is the value of the X-Plex-Token?',
-  }, {
-    type: 'text',
-    name: 'librarySectionId',
-    message: 'What is the value of librarySectionId?',
-    initial: '1',
-  }, {
-    type: 'text',
     name: 'folder',
     message: 'What is the folder of m3u files that you wish to import?',
   }]);
 
-  if (!response.plexToken) {
-    console.error('X-Plex-Token is required and should be non-empty.');
-    return 1;
-  }
-  if (!response.librarySectionId) {
-    console.error('librarySectionId is required and should be non-empty.');
-    return 1;
-  }
   if (!response.folder || !fs.existsSync(response.folder)) {
     console.error('Folder is required and should be a path to a directory of files.');
     return 1;
@@ -70,12 +53,16 @@ const readFile = promisify(fs.readFile);
   )
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    await fetch(
-      `${process.env.PLEX_SERVER}?sectionID=${response.librarySectionId}&path=${encodeURIComponent(file)}&X-Plex-Token=${response.plexToken}`,
+    const uri = `${process.env.PLEX_SERVER}?sectionID=${process.env.PLEX_LIBRARY_SECTION}&path=${encodeURIComponent(file)}&X-Plex-Token=${process.env.PLEX_LIBRARY_SECTION}`;
+    const r = await fetch(
+      uri,
       {
         method: 'POST',
       }
     );
+    console.log(file);
+    console.log(uri);
+    console.log(r);
     bar.tick({ counter: i })
   }
 })();

@@ -67,9 +67,14 @@ const readFile = promisify(fs.readFile);
       }
     );
     fs.closeSync(tempFile.fd);
+    if (r.status !== 200) {
+      console.error(`Problem with ${file}.`);
+      console.log(file);
+      console.log(uri);
+      console.log(r);
+      return 1;
+    }
     console.log(file);
-    console.log(uri);
-    console.log(r);
     bar.tick({ counter: i })
   }
 })();
